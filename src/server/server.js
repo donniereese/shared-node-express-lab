@@ -21,7 +21,7 @@ const data = new DataManager();
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = `public/uploads/${req.body.user || 'unknown'}`;
-    if (!fs.existsSync(dir)){
+    if (!fs.existsSync(dir)) {
       fs.mkdirpSync(dir);
     }
     cb(null, dir);

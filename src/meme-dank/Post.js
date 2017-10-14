@@ -4,7 +4,6 @@ export default class Post {
   static get defaults() {
     return {
       comments: [],
-      description: '',
       images: [],
       points: 0,
       tags: [],
@@ -19,7 +18,6 @@ export default class Post {
   constructor(post) {
     // load defaults
     this._comments    = Post.defaults.comments;
-    this._description = Post.defaults.description;
     this._images      = Post.defaults.images;
     this._points      = Post.defaults.points;
     this._postDate    = Date.now();
@@ -30,13 +28,11 @@ export default class Post {
     this._via         = Post.defaults.via;
     this._views       = Post.defaults.views;
 
-
     // store passed in information.
     // I did it this way because all of my set methods
     // check to make sure that values are valid before
     // saving them.
     this.comments    = post.comments;
-    this.description = post.description;
     this.images      = post.images;
     this.points      = post.points;
     this.postDate    = post.postDate;
@@ -64,14 +60,9 @@ export default class Post {
   *    User specified for the Post.
   */
   get contents() {
-    return this.description;
-  }
-  /* get description
-  *  return: A String object representing the description that the
-  *    User specified for the Post.
-  */
-  get description() {
-    return this._description;
+    if (this.image)
+      return this.image.description;
+    return null;
   }
   /* get image
   *  return: A String of the path to the image.
@@ -80,7 +71,7 @@ export default class Post {
     return this.images.length > 0 ? this.images[0] : null;
   }
   /* get images
-  *  return: A String Array of image paths.
+  *  return: A Image Array of all the images in the post.
   */
   get images() {
     return this._images;
@@ -144,10 +135,6 @@ export default class Post {
     if (this._comments === Post.defaults.comments && Array.isArray(comments))
       this._comments = comments;
   }
-  set description(description) {
-    if (typeof description === 'string')
-      this._description = description;
-  }
   set image(image) {
     if (typeof image === 'string')
       this._images[0] = image;
@@ -197,7 +184,34 @@ export default class Post {
   }
 }
 
+class Image {
+  constructor(image) {
+    this._description = image.description;
+    this._path = image.path;
+  }
+  /* get description
+  *  return: A String object representing the description that the
+  *    User specified for the Post.
+  */
+  get description() {
+    return this._description;
+  }
+  get path() {
+    return this._path;
+  }
+
+  set description(description) {
+    this._description = description;
+  }
+  set path(path) {
+    this._path = path;
+  }
+
+
+}
+
 const types = {
+  animated: 'animated',
   album: 'album',
   image: 'image'
 }
