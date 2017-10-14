@@ -53,6 +53,9 @@ module.exports = [
           loader: 'babel-loader'
         }
       ].concat(commonLoaders)
+    },
+    resolve: {
+      extensions: ['.js', '.jsx']
     }
   },
   {

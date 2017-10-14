@@ -1,9 +1,18 @@
-const bodyParser = require('body-parser');
-const express = require('express');
-const fs = require('fs-extra');
-const multer = require('multer');
-const mimeTypes = require('mime-types');
-const DataManager = require('../res/datamanager.js');
+// node packages
+var path = require('path');
+
+// npm modules
+import bodyParser from 'body-parser';
+import express from 'express';
+import fs from 'fs-extra';
+import multer from 'multer';
+import mimeTypes from 'mime-types';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+
+import DataManager from '../meme-dank/data/DataManager';
+import App from '../client/components/App';
+import index from '../meme-dank/templates';
 
 // Data Storage
 const data = new DataManager();
@@ -11,7 +20,7 @@ const data = new DataManager();
 // File Storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dir = `public/uploads/${req.body.user || 'unknown'}`
+    const dir = `public/uploads/${req.body.user || 'unknown'}`;
     if (!fs.existsSync(dir)){
       fs.mkdirpSync(dir);
     }
@@ -23,28 +32,26 @@ const storage = multer.diskStorage({
   }
 });
 
+// ===LOAD DATA===
+//  ----TO DO----
+// ===LOAD DATA===
 
-// { storage: storage, options: { fileFilter: ... } };
-const upload = multer({ storage: storage });
-
-// User Error Status
 const STATUS_USER_ERROR = 422;
 
-// This array of posts persists in memory across requests. Feel free
-// to change this to a let binding if you need to reassign it.
 const posts = [];
-
 const server = express();
-// to enable parsing of json bodies for post requests
+const upload = multer({ storage: storage });
+
+const getClientIP = (req) => (req.headers['x-forwarded-for'] ||
+  req.connection.remoteAddress ||
+  req.socket.remoteAddress ||
+  req.connection.socket.remoteAddress).split(",")[0];
+
 server.use(bodyParser.json());
-server.use(express.static('./public'));
+server.use(express.static('public', {
+    index: false
+}));
 
-
-/* Get list of posts
- * - - - - -
- *
- *
- */
 server.get('/posts', (req, res) => {
   const { term } = req.query;
   if (term === undefined) {
@@ -62,13 +69,20 @@ server.get('/posts', (req, res) => {
   }
 });
 
+server.get('/gallery', (req, res) => {
+  res.send({show: 'gallery'});
+});
 
-/* Submit Post data
- *
- *
- *
- *
- */
+server.get('/gallery/:user/:post?', (req, res) => {
+  const user = req.param('user');
+  const post = req.param('post');
+  if (post) { // show them the Post
+    res.send({post});
+  } else { // show them the User's profile
+    res.send({user});
+  }
+});
+
 server.post('/posts', upload.array('dank-memes'), (req, res) => {
   console.log('======/posts | POST======');
   console.log(`  Request: ${req.originalUrl}`);
@@ -83,73 +97,56 @@ server.post('/posts', upload.array('dank-memes'), (req, res) => {
   res.json({length: req.files.length});
 });
 
+server.put('/posts', (req, res) => {
+  // console.log(req.body, req.query, req.params);
+  const post = posts.find((p, i) => p.id === req.body.id);
+  const postIndex = (post !== undefined) ? posts.indexOf(post) : undefined;
 
-/* Update Post data
- *
- *
- *
- */
- server.put('/posts', (req, res) => {
-   // console.log(req.body, req.query, req.params);
-   const post = posts.find((p, i) => p.id === req.body.id);
-   const postIndex = (post !== undefined) ? posts.indexOf(post) : undefined;
+  if (post === undefined) {
+    handleUserError({ error: 'This is not the post you are looking for; It is missing the id.' }, res);
+    return;
+  }
 
-   if (post === undefined) {
-     handleUserError({ error: 'This is not the post you are looking for; It is missing the id.' }, res);
-     return;
-   }
+  if (req.body.title === undefined) {
+    handleUserError({ error: 'Impending Error, Abort! Post is missing title.' }, res);
+    return;
+  }
 
-   if (req.body.title === undefined) {
-     handleUserError({ error: 'Impending Error, Abort! Post is missing title.' }, res);
-     return;
-   }
+  if (req.body.contents === undefined) {
+    handleUserError({ error: 'Impending Error, Abort! Post is missing contents.' }, res);
+    return;
+  }
 
-   if (req.body.contents === undefined) {
-     handleUserError({ error: 'Impending Error, Abort! Post is missing contents.' }, res);
-     return;
-   }
-
-   posts[postIndex] = Object.assign(post, req.body);
-   res.json(posts[postIndex]);
- });
-
-
-/* Remove Post
- *
- *
- *
- *
- *
- */
- server.delete('/posts', (req, res) => {
-   const { id } = req.body;
-   if (id === undefined) {
-     handleUserError({ error: 'Impending Error, Abort! Request to Delete DENIED on account of you no have ID.' }, res);
-     return;
-   }
-
-   const postIndex = posts.findIndex((p, i) => p.id === req.body.id);
-
-   if (postIndex === -1) {
-     handleUserError({ error: 'Impending Error, Abort! Request to Delete DENIED on account of you no know the known ID.' }, res);
-     return;
-   }
+  posts[postIndex] = Object.assign(post, req.body);
+  res.json(posts[postIndex]);
 });
 
+server.delete('/posts', (req, res) => {
+  const { id } = req.body;
+  if (id === undefined) {
+    handleUserError({ error: 'Impending Error, Abort! Request to Delete DENIED on account of you no have ID.' }, res);
+    return;
+  }
 
-/* Get App Webpage
- *
- *
- *
- *
- *
- */
+  const postIndex = posts.findIndex((p, i) => p.id === req.body.id);
+
+  if (postIndex === -1) {
+    handleUserError({ error: 'Impending Error, Abort! Request to Delete DENIED on account of you no know the known ID.' }, res);
+    return;
+  }
+});
+
 server.get('/', (req, res) => {
   console.log('======/ | GET======');
   console.log(`  Request: ${req.originalUrl}`);
-  console.log(`  From: ${req.headers.origin}`);
-  res.sendFile('./public/index.html');
+  console.log(`  From: ${getClientIP(req)}`);
+  const appString = renderToString(<App />);
+
+  res.send(index({
+    title: 'Meme Dank',
+    body: appString
+  }));
 });
 
-// Export Server to app
-module.exports = { posts, server };
+export default server;
+export { posts, upload, data };
