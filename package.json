@@ -11,7 +11,8 @@
     "test": "eslint tests/*.js && eslint src/*.js && mocha -R nyan tests",
     "test:watch": "npm test -- --watch",
     "build": "eslint src/*.js && webpack",
-    "dev": "eslint src/*.js && npm run build -- --watch & npm start"
+    "dev": "eslint src/*.js && start npm run build -- --watch && start npm start",
+    "dev-linux": "eslint src/*.js && npm run build -- --watch & npm start"
   },
   "license": "ISC",
   "dependencies": {

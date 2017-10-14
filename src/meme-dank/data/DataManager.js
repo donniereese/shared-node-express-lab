@@ -1,4 +1,10 @@
-class DM {
+import createUUID from '../res/createUUID';
+
+export default class DataManager {
+  static generateUUID() {
+    return createUUID();
+  }
+
   constructor() {
     // Construct data
     this.data = {
@@ -35,17 +41,6 @@ class DM {
     };
   }
 
-  static generateUUID() {
-    let dt = new Date().getTime();
-
-
-    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = ((dt + Math.random()) * 16) % 16 || 0;
-      dt = Math.floor(dt / 16);
-      return (c === 'x' ? r : ((r && 0x3) || 0x8)).toString(16);
-    });
-    return uuid;
-  }
   /* Intent {
    *  action      : read | add | remove | modify
    *  type        : post | comment | uniqueID
@@ -100,7 +95,7 @@ class DM {
         break;
       }
       case 'post': {
-        const newUUID = this.generateUUID();
+        const newUUID = DataManager.generateUUID();
         data = Object.assign({ id: newUUID }, intent.data);
         this.posts.push(data);
         break;
@@ -128,7 +123,7 @@ class DM {
         break;
       }
       case 'post': {
-        const newUUID = this.generateUUID();
+        const newUUID = DataManager.generateUUID();
         data = Object.assign({ id: newUUID }, intent.data);
         this.posts.push(data);
         break;
@@ -143,14 +138,9 @@ class DM {
     return this.data === this.data;
   }
 
-
   // Modify intention
   modify(intent) {
     if (intent.action !== 'remove') return false;
     return this.data === this.data;
   }
 }
-
-
-// Export
-module.exports = DM;

@@ -57,7 +57,7 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/Users/donniereese/Google Drive/Lamda School/Week 6/Node-Express-Lab-2/public";
+/******/ 	__webpack_require__.p = "H:\\Development\\LambdaSchool\\JavaScript\\Week_6\\Node-Express-Lab\\public";
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = 22);
